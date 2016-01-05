@@ -1,0 +1,30 @@
+<div class="container">
+    <div class="row">
+        <form name="userForm" class="form">
+            <div class="form-group">
+                <label for="emailAddress">Email address</label>
+                <input ng-model="user.emailAddress" type="text" class="form-control" id="emailAddress" placeholder="Email">
+            </div>
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input ng-model="user.firstName" type="text" class="form-control" id="firstName" placeholder="First Name">
+            </div>
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input ng-model="user.lastName" type="text" class="form-control" id="lastName" placeholder="Last Name">
+            </div>
+            <button ng-click="submit()" type="submit" class="btn btn-default">Save</button>
+        </form>
+    </div>
+    <br/><br/>
+    <div class="row">
+        <table class="table">
+            <tr ng-repeat="user in users">
+                <td ng-bind="user.emailAddress"></td>
+                <td ng-bind="user.firstName"></td>
+                <td ng-bind="user.lastName"></td>
+            </tr>
+        </table>
+        <button ng-click="refresh()" type="button" class="btn btn-default">Refresh</button>
+    </div>
+</div>

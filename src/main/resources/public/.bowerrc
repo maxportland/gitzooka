@@ -1,0 +1,4 @@
+{
+	"proxy":"http://connsvr.nike.com:8080",
+	"https-proxy":"https://connsvr.nike.com:8080"
+}

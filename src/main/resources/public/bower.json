@@ -1,0 +1,19 @@
+{
+  "name": "spring boot test",
+  "authors": [
+    "MDav48 <max.davis@nike.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
