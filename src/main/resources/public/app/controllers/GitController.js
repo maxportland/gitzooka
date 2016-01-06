@@ -25,6 +25,14 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
         });
     };
 
+    $scope.refreshAppRepositories = function() {
+        $scope.appRepositoriesList = AppRepositories.list();
+        $scope.appRepositoriesList.$promise.then(function(appRepositories) {
+            $scope.appRepositories = appRepositories;
+        });
+        $scope.refresh();
+    };
+
     $scope.appRepositoriesList = AppRepositories.list();
     $scope.appRepositoriesList.$promise.then(function(appRepositories) {
         $scope.appRepositories = appRepositories;
@@ -49,21 +57,13 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
     });
 
     $scope.addApp = function() {
-        var appRepoSave = AppRepository.save(
-            {
-                "path":$scope.newApp.path,
-                "username":$scope.newApp.username,
-                "password":$scope.newApp.password,
-                "privateKeyFile":$scope.newApp.privateKeyFile,
-                "knownHostsFile":$scope.newApp.knownHostsFile,
-                "privateKeyPassphrase":$scope.newApp.privateKeyPassphrase
-            }
-        );
+        var appRepoSave = AppRepository.save($scope.newApp);
         appRepoSave.$promise.then(function() {
             $scope.appRepositoriesList = AppRepositories.list();
             $scope.appRepositoriesList.$promise.then(function() {
-                $scope.refresh();
                 $scope.newApp = {};
+                $('#add-repo-modal').modal('hide');
+                $scope.refreshAppRepositories();
             });
         });
     }

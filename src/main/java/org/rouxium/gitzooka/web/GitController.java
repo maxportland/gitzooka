@@ -1,9 +1,6 @@
 package org.rouxium.gitzooka.web;
 
-import org.eclipse.jgit.api.CreateBranchCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullResult;
-import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
@@ -16,6 +13,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.transport.SshTransport;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.rouxium.gitzooka.config.CustomConfigSessionFactory;
 import org.rouxium.gitzooka.domain.*;
@@ -60,11 +58,15 @@ public class GitController {
         if(appRepository == null) return null;
         Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
-        CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
-        PullResult pullResult = git.pull()
-                .setCredentialsProvider(customConfigSessionFactory.getUsernamePasswordCredentialsProvider())
-                .setTransportConfigCallback(transport -> ((SshTransport)transport).setSshSessionFactory(customConfigSessionFactory))
-                .call();
+        PullCommand pullCommand = git.pull();
+        if(appRepository.getConnectionType().equals(AppRepository.ConnectionType.SSH)) {
+            CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
+            pullCommand = pullCommand.setCredentialsProvider(customConfigSessionFactory.getUsernamePasswordCredentialsProvider())
+                    .setTransportConfigCallback(transport -> ((SshTransport) transport).setSshSessionFactory(customConfigSessionFactory));
+        } else {
+            pullCommand = pullCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(appRepository.getUsername(), appRepository.getPassword()));
+        }
+        PullResult pullResult = pullCommand.call();
         return SimplePullResult.builder()
                 .fetchMessage(pullResult.getFetchResult().getMessages())
                 .mergeSuccess(pullResult.getMergeResult().getMergeStatus().isSuccessful())
@@ -200,15 +202,18 @@ public class GitController {
     List<SimplePushResult> push(@RequestParam String repoId) throws IOException, GitAPIException {
         AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
         if(appRepository == null) return null;
-        CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
         Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         List<SimplePushResult> simplePushResults = new ArrayList<>();
-        git.push()
-                .setCredentialsProvider(customConfigSessionFactory.getUsernamePasswordCredentialsProvider())
-                .setTransportConfigCallback(transport -> ((SshTransport)transport).setSshSessionFactory(customConfigSessionFactory))
-                .call()
-                .forEach(pushResult -> simplePushResults.add(SimplePushResult.builder().messages(pushResult.getMessages()).build()));
+        PushCommand pushCommand = git.push();
+        if(appRepository.getConnectionType().equals(AppRepository.ConnectionType.SSH)) {
+            CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
+            pushCommand = pushCommand.setCredentialsProvider(customConfigSessionFactory.getUsernamePasswordCredentialsProvider())
+                    .setTransportConfigCallback(transport -> ((SshTransport) transport).setSshSessionFactory(customConfigSessionFactory));
+        } else {
+            pushCommand = pushCommand.setCredentialsProvider(new UsernamePasswordCredentialsProvider(appRepository.getUsername(), appRepository.getPassword()));
+        }
+        pushCommand.call().forEach(pushResult -> simplePushResults.add(SimplePushResult.builder().messages(pushResult.getMessages()).build()));
         return simplePushResults;
     }
 

@@ -129,18 +129,27 @@
                         <label for="password">Password:</label>
                         <input ng-model="newApp.password" type="password" class="form-control" id="password" placeholder="Password">
                     </div>
-                    <h4>SSH:</h4>
-                    <div class="form-group">
-                        <label for="privateKeyFile">Private Key File:</label>
-                        <input ng-model="newApp.privateKeyFile" type="text" class="form-control" id="privateKeyFile" placeholder="Private Key File">
+                    <div class="form-group" ng-init="newApp.connectionType='HTTPS'">
+                        <label class="radio-inline">
+                            <input type="radio" name="connectionType" ng-model="newApp.connectionType" id="connectionTypeHTTPS" value="HTTPS"> HTTPS
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="connectionType" ng-model="newApp.connectionType" id="connectionTypeSSH" value="SSH"> SSH
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <label for="privateKeyPassphrase">Key Passphrase:</label>
-                        <input ng-model="newApp.privateKeyPassphrase" type="text" class="form-control" id="privateKeyPassphrase" placeholder="Key Passphrase">
-                    </div>
-                    <div class="form-group">
-                        <label for="knownHostsFile">Known Hosts File:</label>
-                        <input ng-model="newApp.knownHostsFile" type="text" class="form-control" id="knownHostsFile" placeholder="Known Hosts File">
+                    <div ng-show="newApp.connectionType==='SSH'">
+                        <div class="form-group">
+                            <label for="privateKeyFile">Private Key File:</label>
+                            <input ng-model="newApp.privateKeyFile" type="text" class="form-control" id="privateKeyFile" placeholder="Private Key File">
+                        </div>
+                        <div class="form-group">
+                            <label for="privateKeyPassphrase">Key Passphrase:</label>
+                            <input ng-model="newApp.privateKeyPassphrase" type="text" class="form-control" id="privateKeyPassphrase" placeholder="Key Passphrase">
+                        </div>
+                        <div class="form-group">
+                            <label for="knownHostsFile">Known Hosts File:</label>
+                            <input ng-model="newApp.knownHostsFile" type="text" class="form-control" id="knownHostsFile" placeholder="Known Hosts File">
+                        </div>
                     </div>
                 </form>
             </div>

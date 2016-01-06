@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 @NoArgsConstructor
 @ToString
 public class AppRepository {
+    public enum ConnectionType { SSH, HTTPS }
     @Id
     private String id;
     private String name;
@@ -18,4 +19,5 @@ public class AppRepository {
     private String privateKeyFile;
     private String knownHostsFile;
     private String privateKeyPassphrase;
+    private ConnectionType connectionType;
 }

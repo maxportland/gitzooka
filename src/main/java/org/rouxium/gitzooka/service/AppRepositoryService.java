@@ -4,6 +4,7 @@ import org.rouxium.gitzooka.config.CustomConfigSessionFactory;
 import org.rouxium.gitzooka.domain.AppRepository;
 import org.rouxium.gitzooka.repository.AppRepositoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class AppRepositoryService {
         return appRepositoryRepository.findAll();
     }
 
+    @CacheEvict(cacheNames="repos", allEntries=true)
     public AppRepository addAppRepository(AppRepository appRepository) {
         return appRepositoryRepository.save(appRepository);
     }
