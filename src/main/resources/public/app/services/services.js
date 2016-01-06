@@ -1,18 +1,5 @@
 var appServices = angular.module('appServices', ['ngResource']);
 
-appServices.factory('Test', ['$resource', function($resource){
-    return $resource('/test', {}, {
-        query: {method:'GET', isArray:true}
-    });
-}]);
-
-appServices.factory('User', ['$resource', function($resource){
-    return $resource('/user', {}, {
-        save: {method:'POST'},
-        list: {method:'GET', isArray:true}
-    });
-}]);
-
 appServices.factory('GitBranches', ['$resource', function($resource){
     return $resource('/git/branches', {}, {
         list: {method:'GET', isArray:true}
