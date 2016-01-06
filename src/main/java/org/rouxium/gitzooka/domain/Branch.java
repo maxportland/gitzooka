@@ -9,5 +9,5 @@ import lombok.*;
 public class Branch {
     private String name;
     private String fullName;
-    private String appName;
+    private String repoId;
 }

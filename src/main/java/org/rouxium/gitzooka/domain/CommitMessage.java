@@ -8,5 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 public class CommitMessage {
     private String message;
-    private String appName;
+    private String repoId;
 }

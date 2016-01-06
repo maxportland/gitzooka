@@ -8,17 +8,7 @@
                 <p ng-if="!appRepositories || appRepositories.length === 0">No App Repositories</p>
             </div>
             <div class="row">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Add Repository
-                    </div>
-                    <div class="panel-body">
-                        <form class="form-inline">
-                            <input ng-model="newApp.path" type="text" class="form-control" id="path" placeholder="Full path to .git folder">
-                            <button ng-click="addApp()" type="submit" class="btn btn-default">Add</button>
-                        </form>
-                    </div>
-                </div>
+                <button class="btn btn-default" ng-click="showAddRepositoryModal()">Add Repository</button>
             </div>
         </div>
         <div class="col-md-9">
@@ -28,24 +18,24 @@
                     <div style="padding-top:10px;">
                         <div class="panel panel-default">
                             <div class="panel-heading">
-                                <h3 class="panel-title">{{appRepository.name}} / <strong>{{repoData[appRepository.name].activeBranch.name}}</strong> <i style="margin-left:10px;" class="fa fa-refresh fa-spin" ng-if="repoData[appRepository.name].loading"></i> <span ng-if="repoData[appRepository.name].status.uncommittedChanges.length" class="badge pull-right">{{repoData[appRepository.name].status.uncommittedChanges.length}}</span></h3>
+                                <h3 class="panel-title">{{appRepository.name}} / <strong>{{repoData[appRepository.id].activeBranch.name}}</strong> <i style="margin-left:10px;" class="fa fa-refresh fa-spin" ng-if="repoData[appRepository.id].loading"></i> <span ng-if="repoData[appRepository.id].status.uncommittedChanges.length" class="badge pull-right">{{repoData[appRepository.id].status.uncommittedChanges.length}}</span></h3>
                             </div>
                             <div class="panel-body">
                                 <div class="form-group">
                                     <label>Select Branch</label>
-                                    <select class="form-control" ng-model="repoData[appRepository.name].selectedBranch" ng-options="gitBranch.name for gitBranch in repoData[appRepository.name].branches track by gitBranch.fullName">
+                                    <select class="form-control" ng-model="repoData[appRepository.id].selectedBranch" ng-options="gitBranch.name for gitBranch in repoData[appRepository.id].branches track by gitBranch.fullName">
                                     </select>
                                 </div>
-                                <button class="btn btn-default btn-bg" ng-click="checkout(appRepository.name)"><i class="fa fa-random"></i> Checkout Selected Branch</button>
-                                <button class="btn btn-default btn-bg" ng-click="deleteBranch(appRepository.name)"><span class="octicon octicon-x"></span> Delete Selected Branch</button>
+                                <button class="btn btn-default btn-bg" ng-click="checkout(appRepository.id)"><i class="fa fa-random"></i> Checkout Selected Branch</button>
+                                <button class="btn btn-default btn-bg" ng-click="deleteBranch(appRepository.id)"><span class="octicon octicon-x"></span> Delete Selected Branch</button>
                             </div>
                             <div class="panel-footer">
-                                <button class="btn btn-default btn-bg" ng-click="pull(appRepository.path, appRepository.name)"><span class="octicon octicon-git-pull-request"></span> Pull</button>
-                                <button class="btn btn-default btn-bg" data-toggle="modal" ng-click="showCreateModal(appRepository.name)"><span class="octicon octicon-git-branch"></span> Create Branch</button>
-                                <button class="btn btn-default btn-bg" ng-click="rebase(appRepository.name)"><i class="fa fa-undo"></i> Rebase</button>
-                                <button class="btn btn-default btn-bg" ng-click="revert(appRepository.name)"><i class="fa fa-history"></i> Revert</button>
-                                <button class="btn btn-default btn-bg" ng-click="showCommitModal(appRepository.name)"><span class="octicon octicon-git-commit"></span> Commit</button>
-                                <button class="btn btn-default btn-bg" ng-click="push(appRepository.name)"><span class="octicon octicon-cloud-upload"></span> Push</button>
+                                <button class="btn btn-default btn-bg" ng-click="pull(appRepository.id)"><span class="octicon octicon-git-pull-request"></span> Pull</button>
+                                <button class="btn btn-default btn-bg" data-toggle="modal" ng-click="showCreateModal(appRepository.id)"><span class="octicon octicon-git-branch"></span> Create Branch</button>
+                                <button class="btn btn-default btn-bg" ng-click="rebase(appRepository.id)"><i class="fa fa-undo"></i> Rebase</button>
+                                <button class="btn btn-default btn-bg" ng-click="revert(appRepository.id)"><i class="fa fa-history"></i> Revert</button>
+                                <button class="btn btn-default btn-bg" ng-click="showCommitModal(appRepository.id)"><span class="octicon octicon-git-commit"></span> Commit</button>
+                                <button class="btn btn-default btn-bg" ng-click="push(appRepository.id)"><span class="octicon octicon-cloud-upload"></span> Push</button>
                             </div>
                         </div>
                     </div>
@@ -96,14 +86,14 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">Unstaged Files</div>
                     <ul class="list-group" style="overflow:hidden;height:150px;">
-                        <li ng-repeat="file in selectedApp.status.modified" class="list-group-item">{{file}} <input class="pull-right" type="checkbox" ng-click="add(selectedApp.name, file)"/></li>
+                        <li ng-repeat="file in selectedApp.status.modified" class="list-group-item">{{file}} <input class="pull-right" type="checkbox" ng-click="add(selectedApp.id, file)"/></li>
                         <li ng-if="!selectedApp.status.modified || selectedApp.status.modified.length === 0" class="list-group-item">No files currently uncommitted</li>
                     </ul>
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-heading">Staged Files</div>
                     <ul class="list-group" style="overflow:hidden;height:150px;">
-                        <li ng-repeat="file in selectedApp.status.changed" class="list-group-item">{{file}} <input class="pull-right" type="checkbox" checked="checked" ng-click="remove(selectedApp.name, file)"/></li>
+                        <li ng-repeat="file in selectedApp.status.changed" class="list-group-item">{{file}} <input class="pull-right" type="checkbox" checked="checked" ng-click="remove(selectedApp.id, file)"/></li>
                         <li ng-if="!selectedApp.status.changed  || selectedApp.status.changed.length === 0" class="list-group-item">No files currently staged</li>
                     </ul>
                 </div>
@@ -115,6 +105,48 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 <button type="button" ng-disabled="!selectedApp.status.changed  || selectedApp.status.changed.length === 0" ng-click="commit(selectedApp.name, selectedApp.commitMessage)" class="btn btn-primary">Commit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" tabindex="-1" role="dialog" id="add-repo-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Add Repository</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form">
+                    <div class="form-group">
+                        <label for="path">Repository Path:</label>
+                        <input ng-model="newApp.path" type="text" class="form-control" id="path" placeholder="Full path to .git folder">
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Username:</label>
+                        <input ng-model="newApp.username" type="text" class="form-control" id="username" placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input ng-model="newApp.password" type="password" class="form-control" id="password" placeholder="Password">
+                    </div>
+                    <h4>SSH:</h4>
+                    <div class="form-group">
+                        <label for="privateKeyFile">Private Key File:</label>
+                        <input ng-model="newApp.privateKeyFile" type="text" class="form-control" id="privateKeyFile" placeholder="Private Key File">
+                    </div>
+                    <div class="form-group">
+                        <label for="privateKeyPassphrase">Key Passphrase:</label>
+                        <input ng-model="newApp.privateKeyPassphrase" type="text" class="form-control" id="privateKeyPassphrase" placeholder="Key Passphrase">
+                    </div>
+                    <div class="form-group">
+                        <label for="knownHostsFile">Known Hosts File:</label>
+                        <input ng-model="newApp.knownHostsFile" type="text" class="form-control" id="knownHostsFile" placeholder="Known Hosts File">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" ng-click="addApp()" class="btn btn-primary">Add</button>
             </div>
         </div>
     </div>

@@ -2,7 +2,7 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
 
     $scope.repoData = [];
     $scope.newBranch = {};
-    $scope.createBranchAppName = "";
+    $scope.createBranchAppId = "";
     $scope.selectedApp = {};
     $scope.appRepositories = [];
     $scope.log = {
@@ -14,14 +14,14 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
 
     $scope.refresh = function() {
         angular.forEach($scope.appRepositories, function(appRepository) {
-            var currentBranch = GitBranch.currentBranch({'appName':appRepository.name});
+            var currentBranch = GitBranch.currentBranch({'repoId':appRepository.id});
             currentBranch.$promise.then(function(branch) {
-                $scope.repoData[appRepository.name].activeBranch = branch;
-                $scope.repoData[appRepository.name].selectedBranch = branch;
-                $scope.repoData[appRepository.name].loading = false;
+                $scope.repoData[appRepository.id].activeBranch = branch;
+                $scope.repoData[appRepository.id].selectedBranch = branch;
+                $scope.repoData[appRepository.id].loading = false;
             });
-            $scope.repoData[appRepository.name].branches = GitBranches.list({'appName':appRepository.name});
-            $scope.getStatus(appRepository.name);
+            $scope.repoData[appRepository.id].branches = GitBranches.list({'repoId':appRepository.id});
+            $scope.getStatus(appRepository.id);
         });
     };
 
@@ -29,7 +29,8 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
     $scope.appRepositoriesList.$promise.then(function(appRepositories) {
         $scope.appRepositories = appRepositories;
         angular.forEach(appRepositories, function(appRepository) {
-            $scope.repoData[appRepository.name] = {
+            $scope.repoData[appRepository.id] = {
+                id:appRepository.id,
                 name:appRepository.name,
                 loading:true,
                 branches: [],
@@ -48,7 +49,16 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
     });
 
     $scope.addApp = function() {
-        var appRepoSave = AppRepository.save({"path":$scope.newApp.path});
+        var appRepoSave = AppRepository.save(
+            {
+                "path":$scope.newApp.path,
+                "username":$scope.newApp.username,
+                "password":$scope.newApp.password,
+                "privateKeyFile":$scope.newApp.privateKeyFile,
+                "knownHostsFile":$scope.newApp.knownHostsFile,
+                "privateKeyPassphrase":$scope.newApp.privateKeyPassphrase
+            }
+        );
         appRepoSave.$promise.then(function() {
             $scope.appRepositoriesList = AppRepositories.list();
             $scope.appRepositoriesList.$promise.then(function() {
@@ -58,98 +68,99 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
         });
     }
 
-    $scope.getStatus = function(appName) {
-        var status = GitStatus.getStatus({'appName':appName});
+    $scope.getStatus = function(repoId) {
+        var status = GitStatus.getStatus({'repoId':repoId});
         status.$promise.then(function(statusResult) {
-            $scope.repoData[appName].status = statusResult;
+            $scope.repoData[repoId].status = statusResult;
         });
     };
 
-    $scope.pull = function(path, appName) {
-        $scope.repoData[appName].loading = true;
-        var pull = GitPull.pull({'path':path});
+    $scope.pull = function(repoId) {
+        $scope.repoData[repoId].loading = true;
+        var pull = GitPull.pull({'repoId':repoId});
         pull.$promise.then(function(pullResult) {
-            console.log(pullResult);
             if(pullResult.success) {
-                $scope.log.messages = $sce.trustAsHtml("Pulled Latest for " + appName + "<br/>"+$scope.log.messages);
+                $scope.log.messages = $sce.trustAsHtml("Pulled Latest for " + $scope.repoData[repoId].name + " / " + $scope.repoData[repoId].activeBranch.name + "<br/>"+$scope.log.messages);
             }
-            $scope.repoData[appName].loading = false;
+            $scope.repoData[repoId].loading = false;
         });
     };
 
-    $scope.push = function(appName) {
-        $scope.repoData[appName].loading = true;
-        var push = GitPush.push({'appName':appName});
+    $scope.push = function(repoId) {
+        $scope.repoData[repoId].loading = true;
+        var push = GitPush.push({'repoId':repoId});
         push.$promise.then(function(pushResult) {
-            console.log(pushResult);
-            $scope.repoData[appName].loading = false;
+            $scope.repoData[repoId].loading = false;
         });
     };
 
-    $scope.checkout = function(appName) {
-        $scope.repoData[appName].loading = true;
-        var checkout = GitCheckout.checkout({'branchName':$scope.repoData[appName].selectedBranch.fullName, 'appName':appName});
+    $scope.checkout = function(repoId) {
+        $scope.repoData[repoId].loading = true;
+        var checkout = GitCheckout.checkout({'branchName':$scope.repoData[repoId].selectedBranch.fullName, 'repoId':repoId});
         checkout.$promise.then(function(branch) {
-            $scope.repoData[appName].activeBranch = branch;
-            $scope.repoData[appName].selectedBranch = branch;
-            $scope.repoData[appName].loading = false;
+            $scope.repoData[repoId].activeBranch = branch;
+            $scope.repoData[repoId].selectedBranch = branch;
+            $scope.repoData[repoId].loading = false;
         });
     };
 
-    $scope.deleteBranch = function(appName) {
-        var deleteBranch = GitBranch.delete({'branchName':$scope.repoData[appName].selectedBranch.fullName, 'appName':appName});
+    $scope.deleteBranch = function(repoId) {
+        var deleteBranch = GitBranch.delete({'branchName':$scope.repoData[repoId].selectedBranch.fullName, 'repoId':repoId});
         deleteBranch.$promise.then(function(response) {
-            console.log(response);
             $scope.refresh();
         });
     };
 
-    $scope.showCreateModal = function(appName) {
-        $scope.createBranchAppName = appName;
+    $scope.showCreateModal = function(repoId) {
+        $scope.createBranchAppId = repoId;
         $('#create-branch-modal').modal('show');
+    };
+
+    $scope.showAddRepositoryModal = function(appName) {
+        $('#add-repo-modal').modal('show');
     };
 
     $scope.saveNewBranch = function() {
         var newBranch = {
             name:$scope.newBranch.name,
-            appName:$scope.createBranchAppName
+            repoId:$scope.createBranchAppId
         };
         var createBranch = GitBranch.create(newBranch);
         createBranch.$promise.then(function(branch) {
-            $scope.repoData[$scope.createBranchAppName].activeBranch = branch;
-            $scope.repoData[$scope.createBranchAppName].selectedBranch = branch;
+            $scope.repoData[$scope.createBranchAppId].activeBranch = branch;
+            $scope.repoData[$scope.createBranchAppId].selectedBranch = branch;
             $scope.newBranch = {};
-            $scope.createBranchAppName = "";
+            $scope.createBranchAppId = "";
             $('#create-branch-modal').modal('hide');
             $scope.refresh();
         });
     };
 
-    $scope.showCommitModal = function(appName) {
-        $scope.selectedApp = $scope.repoData[appName];
+    $scope.showCommitModal = function(repoId) {
+        $scope.selectedApp = $scope.repoData[repoId];
         $('#commit-modal').modal('show');
     };
 
-    $scope.commit = function(appName, message) {
-        var gitCommit = GitCommit.commit({'message':message, 'appName':appName});
+    $scope.commit = function(repoId, message) {
+        var gitCommit = GitCommit.commit({'message':message, 'repoId':repoId});
         gitCommit.$promise.then(function() {
-            $scope.getStatus(appName);
+            $scope.getStatus(repoId);
             $scope.selectedApp = {};
             $('#commit-modal').modal('hide');
         });
     };
 
-    $scope.add = function(appName, filename) {
-        var gitAdd = GitAdd.add({'fileName':filename, 'appName':appName});
+    $scope.add = function(repoId, filename) {
+        var gitAdd = GitAdd.add({'fileName':filename, 'repoId':repoId});
         gitAdd.$promise.then(function() {
-            $scope.getStatus(appName);
+            $scope.getStatus(repoId);
         });
     };
 
-    $scope.remove = function(appName, filename) {
-        var gitRemove = GitRemove.remove({'fileName':filename, 'appName':appName});
+    $scope.remove = function(repoId, filename) {
+        var gitRemove = GitRemove.remove({'fileName':filename, 'repoId':repoId});
         gitRemove.$promise.then(function() {
-            $scope.getStatus(appName);
+            $scope.getStatus(repoId);
         });
     };
 

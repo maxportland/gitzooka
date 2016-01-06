@@ -35,9 +35,6 @@ public class GitController {
     @Autowired
     AppRepositoryService appRepositoryService;
 
-    @Autowired
-    CustomConfigSessionFactory customConfigSessionFactory;
-
     @RequestMapping(value="/repositories", method = RequestMethod.GET, produces = "application/json")
     List<AppRepository> getAppRepositories() {
         return appRepositoryService.getAppRepositories();
@@ -58,9 +55,12 @@ public class GitController {
     }
 
     @RequestMapping(value="/pull", method = RequestMethod.GET, produces = "application/json")
-    SimplePullResult pull(@RequestParam String path) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository(path+"/.git");
+    SimplePullResult pull(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
+        CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
         PullResult pullResult = git.pull()
                 .setCredentialsProvider(customConfigSessionFactory.getUsernamePasswordCredentialsProvider())
                 .setTransportConfigCallback(transport -> ((SshTransport)transport).setSshSessionFactory(customConfigSessionFactory))
@@ -74,14 +74,18 @@ public class GitController {
     }
 
     @RequestMapping(value="/branch", method = RequestMethod.GET, produces = "application/json")
-    Branch getCurrentBranch(@RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    Branch getCurrentBranch(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         return Branch.builder().fullName(localRepo.getFullBranch()).name(localRepo.getBranch()).build();
     }
 
     @RequestMapping(value="/branches", method = RequestMethod.GET, produces = "application/json")
-    List<Branch> listBranches(@RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    List<Branch> listBranches(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         List<Ref> branches = git.branchList().call();
         List<Branch> branchNames = branches.stream()
@@ -93,8 +97,10 @@ public class GitController {
     }
 
     @RequestMapping(value="/checkout", method = RequestMethod.GET, produces = "application/json")
-    Branch checkoutBranch(@RequestParam String branchName, @RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    Branch checkoutBranch(@RequestParam String branchName, @RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         Ref ref = git.checkout()
                 .setCreateBranch(false)
@@ -106,7 +112,9 @@ public class GitController {
 
     @RequestMapping(value="/branch", method = RequestMethod.POST, produces = "application/json")
     Branch createBranch(@RequestBody Branch branch) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+branch.getAppName()+"/.git");
+        AppRepository appRepository = appRepositoryService.getAppRepository(branch.getRepoId());
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         Ref ref = git.branchCreate()
                 .setName(branch.getName())
@@ -122,16 +130,20 @@ public class GitController {
     }
 
     @RequestMapping(value="/branch", method = RequestMethod.DELETE, produces = "application/json")
-    List<String> deleteBranch(@RequestParam String branchName, @RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    List<String> deleteBranch(@RequestParam String branchName, @RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         List<String> results = git.branchDelete().setBranchNames(branchName).call();
         return results;
     }
 
     @RequestMapping(value="/details/changed-files", method = RequestMethod.GET, produces = "application/json")
-    List<DiffEntry> getChangedFiles(@RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    List<DiffEntry> getChangedFiles(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         RevWalk rw = new RevWalk(localRepo);
         ObjectId head = localRepo.resolve(Constants.HEAD);
         RevCommit commit = rw.parseCommit(head);
@@ -145,8 +157,10 @@ public class GitController {
     }
 
     @RequestMapping(value="/status", method = RequestMethod.GET, produces = "application/json")
-    Status getStatus(@RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+appName+"/.git");
+    Status getStatus(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         Status status = git.status().call();
         return status;
@@ -154,7 +168,9 @@ public class GitController {
 
     @RequestMapping(value="/add", method = RequestMethod.POST, produces = "application/json")
     CommitFile addFile(@RequestBody CommitFile file) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+file.getAppName()+"/.git");
+        AppRepository appRepository = appRepositoryService.getAppRepository(file.getRepoId());
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         git.add().addFilepattern(file.getFileName()).call();
         return file;
@@ -162,7 +178,9 @@ public class GitController {
 
     @RequestMapping(value="/remove", method = RequestMethod.POST, produces = "application/json")
     CommitFile removeFile(@RequestBody CommitFile file) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/"+file.getAppName()+"/.git");
+        AppRepository appRepository = appRepositoryService.getAppRepository(file.getRepoId());
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         git.reset().setRef(Constants.HEAD).addPath(file.getFileName()).call();
         return file;
@@ -170,15 +188,20 @@ public class GitController {
 
     @RequestMapping(value="/commit", method = RequestMethod.POST, produces = "application/json")
     CommitMessage commit(@RequestBody CommitMessage message) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/" + message.getAppName() + "/.git");
+        AppRepository appRepository = appRepositoryService.getAppRepository(message.getRepoId());
+        if(appRepository == null) return null;
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         git.commit().setMessage(message.getMessage()).call();
         return message;
     }
 
     @RequestMapping(value="/push", method = RequestMethod.GET, produces = "application/json")
-    List<SimplePushResult> push(@RequestParam String appName) throws IOException, GitAPIException {
-        Repository localRepo = new FileRepository("C:/nikeDev/portal/" + appName + "/.git");
+    List<SimplePushResult> push(@RequestParam String repoId) throws IOException, GitAPIException {
+        AppRepository appRepository = appRepositoryService.getAppRepository(repoId);
+        if(appRepository == null) return null;
+        CustomConfigSessionFactory customConfigSessionFactory = appRepositoryService.sessionFactoryFromAppRepository(appRepository);
+        Repository localRepo = new FileRepository(appRepository.getPath()+"/.git");
         Git git = new Git(localRepo);
         List<SimplePushResult> simplePushResults = new ArrayList<>();
         git.push()

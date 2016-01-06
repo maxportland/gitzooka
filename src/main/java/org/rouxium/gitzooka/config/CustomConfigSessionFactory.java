@@ -7,25 +7,13 @@ import com.jcraft.jsch.UserInfo;
 import org.eclipse.jgit.errors.UnsupportedCredentialItem;
 import org.eclipse.jgit.transport.*;
 import org.eclipse.jgit.util.FS;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 public class CustomConfigSessionFactory extends JschConfigSessionFactory {
 
-    @Value("${ssh.known_hosts_file}")
     private String knownHostsFile;
-
-    @Value("${ssh.private_key_file}")
     private String privateKeyFile;
-
-    @Value("${ssh.private_key_passphrase}")
     private String privateKeyPassphrase;
-
-    @Value("${ssh.username}")
     private String username;
-
-    @Value("${ssh.password}")
     private String password;
 
     @Override
@@ -43,7 +31,9 @@ public class CustomConfigSessionFactory extends JschConfigSessionFactory {
             @Override
             public boolean get(URIish uri, CredentialItem... items) throws UnsupportedCredentialItem {
                 for (CredentialItem item : items) {
-                    ((CredentialItem.StringType) item).setValue(privateKeyPassphrase);
+                    if(privateKeyPassphrase != null) {
+                        ((CredentialItem.StringType) item).setValue(privateKeyPassphrase);
+                    }
                 }
                 return true;
             }
@@ -56,13 +46,36 @@ public class CustomConfigSessionFactory extends JschConfigSessionFactory {
     protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
         JSch jsch = super.getJSch(hc, fs);
         jsch.removeAllIdentity();
-        jsch.setKnownHosts(knownHostsFile);
-        jsch.addIdentity(privateKeyFile);
+        if(knownHostsFile != null) {
+            jsch.setKnownHosts(knownHostsFile);
+        }
+        if(privateKeyFile != null) {
+            jsch.addIdentity(privateKeyFile);
+        }
         return jsch;
     }
 
     public UsernamePasswordCredentialsProvider getUsernamePasswordCredentialsProvider() {
-        return new UsernamePasswordCredentialsProvider(username,password);
+        return new UsernamePasswordCredentialsProvider(username, password != null ? password : "");
     }
 
+    public void setKnownHostsFile(String knownHostsFile) {
+        this.knownHostsFile = knownHostsFile;
+    }
+
+    public void setPrivateKeyFile(String privateKeyFile) {
+        this.privateKeyFile = privateKeyFile;
+    }
+
+    public void setPrivateKeyPassphrase(String privateKeyPassphrase) {
+        this.privateKeyPassphrase = privateKeyPassphrase;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
