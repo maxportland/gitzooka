@@ -1,3 +1,5 @@
 # gitzooka
 
-Git UI using Spring Boot
+Git UI using Spring Boot and jgit.
+
+Very early stages of development
