@@ -53,6 +53,7 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
                 }
             };
         });
+        $scope.selectedApp = $scope.repoData[Object.keys($scope.repoData)[0]];
         $scope.refresh();
     });
 
@@ -134,6 +135,10 @@ appControllers.controller('GitController', ['$scope', '$sce', 'AppRepository', '
             $('#create-branch-modal').modal('hide');
             $scope.refresh();
         });
+    };
+
+    $scope.setSelectedApp = function(repoId) {
+        $scope.selectedApp = $scope.repoData[repoId];
     };
 
     $scope.showCommitModal = function(repoId) {

@@ -1,46 +1,44 @@
 <div class="container">
+    <div class="row" style="margin-bottom:10px;">
+        <button class="btn btn-sm  btn-default" ng-click="refresh()"><span class="octicon octicon-sync"></span> Refresh</button>
+        <button class="btn btn-sm btn-default" ng-click="showAddRepositoryModal()">Add Repository</button>
+    </div>
     <div class="row">
         <div class="col-md-3">
             <div class="row">
                 <ul class="list-group">
-                    <li ng-repeat="appRepo in appRepositories" class="list-group-item">{{appRepo.name}}<br/><small class="text-muted">{{appRepo.path}}</small></li>
+                    <li ng-repeat="appRepo in appRepositories" ng-click="setSelectedApp(appRepo.id)" ng-class="{'active':appRepo.id === selectedApp.id}" class="list-group-item cursor-pointer">{{appRepo.name}}<br/><small ng-class="{'text-white':appRepo.id !== selectedApp.id}">{{appRepo.path}}</small></li>
                 </ul>
                 <p ng-if="!appRepositories || appRepositories.length === 0">No App Repositories</p>
             </div>
-            <div class="row">
-                <button class="btn btn-default" ng-click="showAddRepositoryModal()">Add Repository</button>
-            </div>
         </div>
         <div class="col-md-9">
-            <button class="btn btn-default pull-right" ng-click="refresh()"><span class="octicon octicon-sync"></span> Refresh</button>
-            <uib-tabset>
-                <uib-tab ng-repeat="appRepository in appRepositories" heading="{{appRepository.name}}" active="appRepository.active" disable="appRepository.disabled">
-                    <div style="padding-top:10px;">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">{{appRepository.name}} / <strong>{{repoData[appRepository.id].activeBranch.name}}</strong> <i style="margin-left:10px;" class="fa fa-refresh fa-spin" ng-if="repoData[appRepository.id].loading"></i> <span ng-if="repoData[appRepository.id].status.uncommittedChanges.length" class="badge pull-right">{{repoData[appRepository.id].status.uncommittedChanges.length}}</span></h3>
+            <div ng-repeat="appRepository in appRepositories">
+                <div ng-show="appRepository.id === selectedApp.id">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">{{appRepository.name}} / <strong>{{repoData[appRepository.id].activeBranch.name}}</strong> <i style="margin-left:10px;" class="fa fa-refresh fa-spin" ng-if="repoData[appRepository.id].loading"></i> <span ng-if="repoData[appRepository.id].status.uncommittedChanges.length" class="badge pull-right">{{repoData[appRepository.id].status.uncommittedChanges.length}}</span></h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="form-group">
+                                <label>Select Branch</label>
+                                <select class="form-control" ng-model="repoData[appRepository.id].selectedBranch" ng-options="gitBranch.name for gitBranch in repoData[appRepository.id].branches track by gitBranch.fullName">
+                                </select>
                             </div>
-                            <div class="panel-body">
-                                <div class="form-group">
-                                    <label>Select Branch</label>
-                                    <select class="form-control" ng-model="repoData[appRepository.id].selectedBranch" ng-options="gitBranch.name for gitBranch in repoData[appRepository.id].branches track by gitBranch.fullName">
-                                    </select>
-                                </div>
-                                <button class="btn btn-default btn-bg" ng-click="checkout(appRepository.id)"><i class="fa fa-random"></i> Checkout Selected Branch</button>
-                                <button class="btn btn-default btn-bg" ng-click="deleteBranch(appRepository.id)"><span class="octicon octicon-x"></span> Delete Selected Branch</button>
-                            </div>
-                            <div class="panel-footer">
-                                <button class="btn btn-default btn-bg" ng-click="pull(appRepository.id)"><span class="octicon octicon-git-pull-request"></span> Pull</button>
-                                <button class="btn btn-default btn-bg" data-toggle="modal" ng-click="showCreateModal(appRepository.id)"><span class="octicon octicon-git-branch"></span> Create Branch</button>
-                                <button class="btn btn-default btn-bg" ng-click="rebase(appRepository.id)"><i class="fa fa-undo"></i> Rebase</button>
-                                <button class="btn btn-default btn-bg" ng-click="revert(appRepository.id)"><i class="fa fa-history"></i> Revert</button>
-                                <button class="btn btn-default btn-bg" ng-click="showCommitModal(appRepository.id)"><span class="octicon octicon-git-commit"></span> Commit</button>
-                                <button class="btn btn-default btn-bg" ng-click="push(appRepository.id)"><span class="octicon octicon-cloud-upload"></span> Push</button>
-                            </div>
+                            <button class="btn btn-default btn-bg" ng-click="checkout(appRepository.id)"><i class="fa fa-random"></i> Checkout Selected Branch</button>
+                            <button class="btn btn-default btn-bg" ng-click="deleteBranch(appRepository.id)"><span class="octicon octicon-x"></span> Delete Selected Branch</button>
+                        </div>
+                        <div class="panel-footer">
+                            <button class="btn btn-default btn-bg" ng-click="pull(appRepository.id)"><span class="octicon octicon-git-pull-request"></span> Pull</button>
+                            <button class="btn btn-default btn-bg" data-toggle="modal" ng-click="showCreateModal(appRepository.id)"><span class="octicon octicon-git-branch"></span> Create Branch</button>
+                            <button class="btn btn-default btn-bg" ng-click="rebase(appRepository.id)"><i class="fa fa-undo"></i> Rebase</button>
+                            <button class="btn btn-default btn-bg" ng-click="revert(appRepository.id)"><i class="fa fa-history"></i> Revert</button>
+                            <button class="btn btn-default btn-bg" ng-click="showCommitModal(appRepository.id)"><span class="octicon octicon-git-commit"></span> Commit</button>
+                            <button class="btn btn-default btn-bg" ng-click="push(appRepository.id)"><span class="octicon octicon-cloud-upload"></span> Push</button>
                         </div>
                     </div>
-                </uib-tab>
-            </uib-tabset>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-default">
